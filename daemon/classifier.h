@@ -1,5 +1,5 @@
 /*
- * classifier.h — page classification engine
+ * classifier.h : page classification engine
  *
  * Merges kernel-side write scores (from cxlmm_page_score.write_score) with
  * userspace read scores (from pagemap soft-dirty scanning) to decide whether
@@ -18,7 +18,7 @@
 #include "../include/cxlmm_uapi.h"
 
 /* Maximum number of page records the classifier tracks simultaneously */
-#define CLASSIFIER_MAX_PAGES  (64 * 1024)
+#define CLASSIFIER_MAX_PAGES  (256 * 1024)
 
 /* Classification result for a single page */
 typedef enum {
@@ -124,6 +124,15 @@ int classifier_migration_batch(struct classifier *cl,
  */
 void classifier_reset_page(struct classifier *cl,
 			   uint64_t vaddr, uint32_t pid, int new_node);
+
+/**
+ * classifier_clear_pending - clear PENDING_MIG flag only, preserving scores
+ *
+ * Used when migration fails: marks the page as retryable next cycle without
+ * resetting accumulated scores or corrupting current_node.
+ */
+void classifier_clear_pending(struct classifier *cl,
+			      uint64_t vaddr, uint32_t pid);
 
 /**
  * classifier_purge_pid - remove all records for a PID (process exited)

@@ -1,11 +1,11 @@
 /*
- * pagemap_scan.h — /proc/pid/pagemap reader for access-bit detection
+ * pagemap_scan.h : /proc/pid/pagemap reader for access-bit detection
  *
  * Usage pattern:
- *   1. pagemap_clear_refs(pid)       — write "4" to /proc/pid/clear_refs
+ *   1. pagemap_clear_refs(pid)       : write "4" to /proc/pid/clear_refs
  *      (clears the Accessed bit in all PTEs without affecting page contents)
  *   2. <wait one scan interval>
- *   3. pagemap_scan(pid, cb, ctx)    — reads /proc/pid/pagemap and /proc/pid/maps,
+ *   3. pagemap_scan(pid, cb, ctx)    : reads /proc/pid/pagemap and /proc/pid/maps,
  *      calls cb() for each page whose Present + SoftDirty flags are set.
  *
  * Note: clear_refs type 4 = soft-dirty tracking reset (requires CONFIG_MEM_SOFT_DIRTY).

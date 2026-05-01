@@ -1,5 +1,5 @@
 /*
- * classifier.c — page classification engine implementation
+ * classifier.c : page classification engine implementation
  *
  * Uses open-addressing hash table keyed on (vaddr, pid) pairs.
  * The table size is a power of 2 so we use bitmasking instead of modulo.
@@ -48,7 +48,7 @@ static struct page_record *table_find(struct page_record *records,
 	while (probe < capacity) {
 		struct page_record *slot = &records[idx];
 		if (slot->pid == SLOT_EMPTY_PID)
-			return slot;   /* empty slot — caller may insert here */
+			return slot;   /* empty slot : caller may insert here */
 		if (slot->vaddr == vaddr && slot->pid == pid)
 			return slot;   /* found existing record */
 		idx = (idx + 1) & (capacity - 1);
@@ -113,7 +113,7 @@ int classifier_ingest_score(struct classifier *cl,
 		return -ENOMEM;
 
 	if (slot->pid == SLOT_EMPTY_PID) {
-		/* New entry — build a fresh record (immutable pattern) */
+		/* New entry : build a fresh record (immutable pattern) */
 		new_rec.vaddr        = score->vaddr;
 		new_rec.pid          = score->pid;
 		new_rec.write_score  = score->write_score;
@@ -268,6 +268,25 @@ void classifier_reset_page(struct classifier *cl,
 	new_rec.flags       |= (new_node == cl->cxl_node)
 				? CXLMM_PFLAG_ON_CXL
 				: CXLMM_PFLAG_ON_DDR;
+	*slot = new_rec;
+}
+
+/* --------------------------------------------------------------------------
+ * Public: clear pending-migration flag only (migration failed, retry next cycle)
+ * -------------------------------------------------------------------------- */
+
+void classifier_clear_pending(struct classifier *cl,
+			      uint64_t vaddr, uint32_t pid)
+{
+	struct page_record *slot;
+	struct page_record  new_rec;
+
+	slot = table_find(cl->records, cl->capacity, vaddr, pid);
+	if (!slot || slot->pid == SLOT_EMPTY_PID)
+		return;
+
+	new_rec        = *slot;
+	new_rec.flags &= ~CXLMM_PFLAG_PENDING_MIG;
 	*slot = new_rec;
 }
 

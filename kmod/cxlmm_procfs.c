@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * cxlmm_procfs.c — /proc/cxlmm/{stats,config,pids} seq_file interface
+ * cxlmm_procfs.c : /proc/cxlmm/{stats,config,pids} seq_file interface
  *
- * /proc/cxlmm/stats   — bandwidth snapshot from IMC counters
- * /proc/cxlmm/config  — current module configuration
- * /proc/cxlmm/pids    — list of currently tracked PIDs
+ * /proc/cxlmm/stats   : bandwidth snapshot from IMC counters
+ * /proc/cxlmm/config  : current module configuration
+ * /proc/cxlmm/pids    : list of currently tracked PIDs
  */
 
 #include <linux/proc_fs.h>
@@ -32,7 +32,7 @@ static int stats_show(struct seq_file *m, void *v)
 	snap = st->bw_snapshot;
 	spin_unlock_irqrestore(&st->bw_lock, flags);
 
-	seq_puts(m, "# CXL Memory Manager — Bandwidth Statistics\n");
+	seq_puts(m, "# CXL Memory Manager : Bandwidth Statistics\n");
 	seq_printf(m, "# timestamp_ns       %llu\n", snap.timestamp_ns);
 	seq_printf(m, "ddr_read_mb          %llu\n", snap.ddr_read_mb);
 	seq_printf(m, "ddr_write_mb         %llu\n", snap.ddr_write_mb);
@@ -95,7 +95,7 @@ static int config_show(struct seq_file *m, void *v)
 	cfg = st->config;
 	spin_unlock(&st->config_lock);
 
-	seq_puts(m, "# CXL Memory Manager — Configuration\n");
+	seq_puts(m, "# CXL Memory Manager : Configuration\n");
 	seq_printf(m, "scan_interval_ms     %u\n", cfg.scan_interval_ms);
 	seq_printf(m, "write_threshold_pct  %u\n", cfg.write_threshold_pct);
 	seq_printf(m, "min_scans            %u\n", cfg.min_scans);
@@ -135,7 +135,7 @@ static int pids_show(struct seq_file *m, void *v)
 		return 0;
 	}
 
-	seq_puts(m, "# CXL Memory Manager — Tracked PIDs\n");
+	seq_puts(m, "# CXL Memory Manager : Tracked PIDs\n");
 	seq_puts(m, "# pid    last_scan_jiffies\n");
 
 	read_lock(&st->pid_lock);

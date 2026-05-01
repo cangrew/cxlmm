@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
- * cxlmm.h — kernel-internal data structures for the CXL-aware memory manager
+ * cxlmm.h : kernel-internal data structures for the CXL-aware memory manager
  *
  * All mutable shared state goes through explicit locking (spinlock or rwlock).
  * Structures are replaced atomically rather than mutated in-place where possible.
@@ -35,9 +35,9 @@
 #define CXLMM_DEFAULT_MIN_SCANS           3
 #define CXLMM_DEFAULT_BATCH_SIZE         64
 #define CXLMM_DEFAULT_MAX_PIDS           64
-#define CXLMM_SCORE_RING_SIZE          4096
+#define CXLMM_SCORE_RING_SIZE          (128 * 1024)
 
-/* GUP batch size — must be a power of 2, <= 512 */
+/* GUP batch size : must be a power of 2, <= 512 */
 #define CXLMM_GUP_BATCH  512
 
 /*
@@ -97,7 +97,7 @@ struct cxlmm_imc_box {
 };
 
 /* --------------------------------------------------------------------------
- * Global module state — single instance
+ * Global module state : single instance
  *
  * Immutable fields (set at init, never changed): config_lock, misc_dev, etc.
  * Mutable fields use explicit locking as noted.
@@ -136,7 +136,7 @@ struct cxlmm_state {
 	int                  ddr_node;
 };
 
-/* Single global state pointer — set in module_init, cleared in module_exit */
+/* Single global state pointer : set in module_init, cleared in module_exit */
 extern struct cxlmm_state *g_cxlmm;
 
 /* --------------------------------------------------------------------------
@@ -160,7 +160,7 @@ void cxlmm_procfs_exit(struct cxlmm_state *st);
 long cxlmm_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 
 /* --------------------------------------------------------------------------
- * Score ring helpers — defined in cxlmm_main.c
+ * Score ring helpers : defined in cxlmm_main.c
  * -------------------------------------------------------------------------- */
 
 /**

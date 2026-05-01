@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * cxlmm_main.c — module init/exit, misc device, score ring helpers
+ * cxlmm_main.c : module init/exit, misc device, score ring helpers
  *
  * Initialization order:
  *   1. Validate NUMA nodes
@@ -233,7 +233,7 @@ static int __init cxlmm_init(void)
 		goto err_misc_deregister;
 	}
 
-	pr_info("cxlmm: loaded — cxl_node=%d ddr_node=%d scan_ms=%d write_thr=%d%%\n",
+	pr_info("cxlmm: loaded : cxl_node=%d ddr_node=%d scan_ms=%d write_thr=%d%%\n",
 		cxl_node, ddr_node, scan_interval_ms, write_threshold_pct);
 	return 0;
 

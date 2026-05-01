@@ -7,7 +7,7 @@
 KDIR ?= /home/andres/project_os/linux-6.12.74
 
 # Extra include path so kernel sources can find cxlmm_uapi.h
-EXTRA_CFLAGS := -I$(PWD)/../include -Wall -Werror
+EXTRA_CFLAGS := -I$(CURDIR)/../include -Wall -Werror
 
 obj-m += cxlmm.o
 
@@ -19,9 +19,9 @@ cxlmm-objs := \
 	cxlmm_ioctl.o
 
 all:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules EXTRA_CFLAGS="$(EXTRA_CFLAGS)"
+	$(MAKE) -C $(KDIR) M=$(CURDIR) modules EXTRA_CFLAGS="$(EXTRA_CFLAGS)"
 
 clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
 
 .PHONY: all clean

@@ -1,5 +1,5 @@
 /*
- * libcxlmm.c — malloc-like API implementation for CXL-aware memory placement
+ * libcxlmm.c : malloc-like API implementation for CXL-aware memory placement
  *
  * Design:
  *   - Uses mmap(MAP_ANONYMOUS|MAP_PRIVATE) so pages are known to the kernel.
@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -56,11 +57,11 @@ static size_t page_align_up(size_t n)
 	return (n + (size_t)page_size - 1) & ~((size_t)page_size - 1);
 }
 
-static void alloc_list_add(void *ptr, size_t requested, size_t mmap_sz)
+static int alloc_list_add(void *ptr, size_t requested, size_t mmap_sz)
 {
 	struct alloc_entry *entry = malloc(sizeof(*entry));
 	if (!entry)
-		return;  /* OOM in bookkeeping; ptr will leak on free */
+		return -1;
 	entry->ptr       = ptr;
 	entry->size      = requested;
 	entry->mmap_size = mmap_sz;
@@ -69,6 +70,7 @@ static void alloc_list_add(void *ptr, size_t requested, size_t mmap_sz)
 	entry->next  = g_alloc_list;
 	g_alloc_list = entry;
 	pthread_mutex_unlock(&g_lock);
+	return 0;
 }
 
 /* Returns the mmap_size for ptr, or 0 if not found; removes entry */
@@ -97,7 +99,7 @@ static size_t alloc_list_remove(void *ptr)
 
 int cxlmm_init(void)
 {
-	struct cxlmm_track_req req = {};
+	struct cxlmm_track_req req = {0};
 	int fd, ret;
 
 	pthread_mutex_lock(&g_lock);
@@ -180,7 +182,11 @@ void *cxlmm_alloc(size_t size)
 		return NULL;
 	}
 
-	alloc_list_add(ptr, size, mmap_sz);
+	if (alloc_list_add(ptr, size, mmap_sz) < 0) {
+		fprintf(stderr, "cxlmm_alloc: bookkeeping OOM; releasing mapping\n");
+		munmap(ptr, mmap_sz);
+		return NULL;
+	}
 	return ptr;
 }
 
@@ -198,7 +204,7 @@ void cxlmm_free(void *ptr)
 
 	mmap_sz = alloc_list_remove(ptr);
 	if (mmap_sz == 0) {
-		/* Not in our list — might be a malloc'd fallback ptr */
+		/* Not in our list : might be a malloc'd fallback ptr */
 		free(ptr);
 		return;
 	}

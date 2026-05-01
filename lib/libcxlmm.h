@@ -1,5 +1,5 @@
 /*
- * libcxlmm.h — public malloc-like API for CXL-aware memory allocation
+ * libcxlmm.h : public malloc-like API for CXL-aware memory allocation
  *
  * Applications link against libcxlmm.so and use cxlmm_alloc / cxlmm_free
  * instead of malloc/free to opt in to bandwidth-aware page placement.
@@ -10,7 +10,7 @@
  *   3. returns the pointer to the caller
  *
  * The kernel module + daemon then monitor and migrate pages over time.
- * Applications don't need to change placement logic — cxlmm does it.
+ * Applications don't need to change placement logic : cxlmm does it.
  */
 #ifndef _LIBCXLMM_H
 #define _LIBCXLMM_H

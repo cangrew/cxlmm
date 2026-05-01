@@ -1,5 +1,5 @@
 /*
- * cxlmm_daemon.c — CXL-aware memory manager userspace daemon
+ * cxlmm_daemon.c : CXL-aware memory manager userspace daemon
  *
  * Usage:
  *   cxlmm_daemon [OPTIONS]
@@ -17,10 +17,10 @@
  *   --help            print this help
  *
  * Main loop:
- *   1. ioctl(FETCH_SCORES) — drain kernel write-score ring
- *   2. pagemap_clear_refs() + sleep + pagemap_scan() — detect reads
- *   3. classifier_migration_batch() — find misplaced pages
- *   4. move_pages(2) per PID batch — migrate pages
+ *   1. ioctl(FETCH_SCORES) : drain kernel write-score ring
+ *   2. pagemap_clear_refs() + sleep + pagemap_scan() : detect reads
+ *   3. classifier_migration_batch() : find misplaced pages
+ *   4. move_pages(2) per PID batch : migrate pages
  *   5. classifier_reset_page() for successfully migrated pages
  *   6. sleep remaining interval
  */
@@ -49,7 +49,7 @@
  * -------------------------------------------------------------------------- */
 
 #define MAX_TRACKED_PIDS  64
-#define FETCH_BUF_SIZE    4096  /* score records per ioctl call */
+#define FETCH_BUF_SIZE    (128 * 1024)  /* score records per ioctl call */
 #define MIGRATE_BATCH     64    /* pages per move_pages() call  */
 
 struct daemon_config {
@@ -79,7 +79,7 @@ static void sig_handler(int sig)
 }
 
 /* --------------------------------------------------------------------------
- * Pagemap read callback — feeds read detections into classifier
+ * Pagemap read callback : feeds read detections into classifier
  * -------------------------------------------------------------------------- */
 
 struct pagemap_ctx {
@@ -151,11 +151,10 @@ static void do_migrate(struct daemon_config *cfg,
 		if (cfg->verbose)
 			perror("[daemon] move_pages");
 		/* Clear PENDING_MIG flags so we retry next cycle */
-		for (i = 0; i < n; i++) {
-			/* status[] set by kernel: 0 = success, negative = error */
-			classifier_reset_page(cl, (uint64_t)(uintptr_t)vaddrs[i],
-					      pid, nodes[i]);
-		}
+		for (i = 0; i < n; i++)
+			classifier_clear_pending(cl,
+						 (uint64_t)(uintptr_t)vaddrs[i],
+						 (uint32_t)pid);
 		return;
 	}
 
@@ -172,18 +171,15 @@ static void do_migrate(struct daemon_config *cfg,
 			/*
 			 * Migration failed for this page (e.g. page pinned,
 			 * -EACCES for non-owned page). Clear PENDING_MIG so
-			 * we retry. We do NOT call classifier_reset_page so
-			 * scores are preserved.
+			 * we retry next cycle. Scores and current_node are
+			 * preserved so classification stays accurate.
 			 */
 			if (cfg->verbose)
 				fprintf(stderr, "[daemon]   failed %p: %s\n",
 					vaddrs[i], strerror(-status[i]));
-			/* Clear pending flag by resetting to current node */
-			classifier_reset_page(cl, (uint64_t)(uintptr_t)vaddrs[i],
-					      pid, (int)(uint8_t)
-					      /* we don't know the current node here;
-					       * approximate with ddr_node */
-					      cfg->ddr_node);
+			classifier_clear_pending(cl,
+						 (uint64_t)(uintptr_t)vaddrs[i],
+						 (uint32_t)pid);
 		}
 	}
 }
@@ -252,6 +248,36 @@ static void run_cycle(struct daemon_config *cfg,
 	}
 
 	/* 3 & 4. Classify and migrate per PID */
+	if (cfg->verbose) {
+		/* Debug: count classification categories */
+		uint32_t n_unk = 0, n_wr = 0, n_rd = 0, n_bal = 0;
+		for (uint32_t j = 0; j < cl->capacity; j++) {
+			if (cl->records[j].pid == 0) continue;
+			page_class_t c = classifier_classify_page(cl,
+				cl->records[j].vaddr, cl->records[j].pid);
+			switch (c) {
+			case CLASS_UNKNOWN:     n_unk++; break;
+			case CLASS_WRITE_HEAVY: n_wr++;  break;
+			case CLASS_READ_HEAVY:  n_rd++;  break;
+			case CLASS_BALANCED:    n_bal++; break;
+			}
+		}
+		/* Also sample one record for debugging */
+		uint32_t sample_ws = 0, sample_rs = 0, sample_sc = 0;
+		for (uint32_t j = 0; j < cl->capacity; j++) {
+			if (cl->records[j].pid != 0 && cl->records[j].write_score > 0) {
+				sample_ws = cl->records[j].write_score;
+				sample_rs = cl->records[j].read_score;
+				sample_sc = cl->records[j].scan_count;
+				break;
+			}
+		}
+		fprintf(stderr, "[daemon] classify: %u unknown, %u write-heavy, "
+			"%u read-heavy, %u balanced (table=%u) "
+			"[sample: ws=%u rs=%u sc=%u]\n",
+			n_unk, n_wr, n_rd, n_bal, cl->count,
+			sample_ws, sample_rs, sample_sc);
+	}
 	for (i = 0; i < cfg->pid_count; i++) {
 		do_migrate(cfg, cl, cfg->pids[i]);
 	}

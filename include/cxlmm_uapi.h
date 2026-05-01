@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 /*
- * cxlmm_uapi.h — shared kernel/userspace ABI for the CXL-aware memory manager
+ * cxlmm_uapi.h : shared kernel/userspace ABI for the CXL-aware memory manager
  *
  * All structs use fixed-width types and explicit padding so they are
  * stable across 32/64-bit userspace. The ioctl command numbers live here
@@ -13,13 +13,8 @@
 #include <linux/types.h>
 #include <linux/ioctl.h>
 #else
-#include <stdint.h>
+#include <linux/types.h>
 #include <sys/ioctl.h>
-typedef uint8_t  __u8;
-typedef uint16_t __u16;
-typedef uint32_t __u32;
-typedef uint64_t __u64;
-typedef int32_t  __s32;
 #endif
 
 /* --------------------------------------------------------------------------

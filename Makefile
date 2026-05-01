@@ -8,15 +8,21 @@
 #   make uninstall              # rmmod
 #   make clean                  # clean all build artifacts
 
-KDIR    ?= /home/andres/project_os/linux-6.12.74
-CXL_NODE ?= 2
+# KDIR    ?= /home/andres/project_os/linux-6.12.74
+KDIR ?= /lib/modules/$(shell uname -r)/build
+CXL_NODE ?= 1
 DDR_NODE ?= 0
 
 export KDIR CXL_NODE DDR_NODE
 
-.PHONY: all kmod lib daemon install uninstall clean
+.PHONY: all kmod lib daemon smoke install uninstall clean
 
-all: kmod lib daemon
+all: kmod lib daemon smoke
+
+smoke: lib
+	$(CC) -O2 -Wall -I$(CURDIR)/lib -o $(CURDIR)/../cxlmm_smoke \
+		$(CURDIR)/../cxlmm_smoke.c \
+		-L$(CURDIR)/lib -lcxlmm -lpthread
 
 kmod:
 	$(MAKE) -C kmod KDIR=$(KDIR)
@@ -39,3 +45,4 @@ clean:
 	$(MAKE) -C kmod KDIR=$(KDIR) clean
 	$(MAKE) -C lib clean
 	$(MAKE) -C daemon clean
+	rm -f $(CURDIR)/../cxlmm_smoke

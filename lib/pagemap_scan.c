@@ -1,5 +1,5 @@
 /*
- * pagemap_scan.c — /proc/pid/pagemap reader
+ * pagemap_scan.c : /proc/pid/pagemap reader
  *
  * _GNU_SOURCE enables pread, fopen, etc. in strict C11 mode.
  *

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * cxlmm_bw_monitor.c — Intel IMC CAS counter monitoring via perf_event
+ * cxlmm_bw_monitor.c : Intel IMC CAS counter monitoring via perf_event
  *
  * Reads SPR (Sapphire Rapids) IMC uncore events:
  *   cas_count_read:  event=0x05, umask=0xcf
@@ -12,7 +12,7 @@
  * perf_event_create_kernel_counter is EXPORT_SYMBOL_GPL.
  * We create one read + one write event per online CPU that has an IMC,
  * up to CXLMM_MAX_IMC_BOXES.  On non-SPR hardware the events will fail
- * gracefully with ENODEV/EOPNOTSUPP — init returns non-zero (non-fatal).
+ * gracefully with ENODEV/EOPNOTSUPP : init returns non-zero (non-fatal).
  *
  * cxlmm_bw_monitor_sample() is called from the scanner kthread each wakeup.
  */
@@ -62,7 +62,7 @@ create_imc_event(int cpu, u8 event_code, u8 umask)
  * Public: init
  *
  * Try to open IMC events on each online CPU, up to CXLMM_MAX_IMC_BOXES.
- * Failure on any single CPU is non-fatal — we skip it.
+ * Failure on any single CPU is non-fatal : we skip it.
  * Returns 0 if at least one box was opened, -ENODEV otherwise.
  * -------------------------------------------------------------------------- */
 
@@ -107,7 +107,7 @@ int cxlmm_bw_monitor_init(struct cxlmm_state *st)
 }
 
 /* --------------------------------------------------------------------------
- * Public: exit — release all perf events
+ * Public: exit : release all perf events
  * -------------------------------------------------------------------------- */
 
 void cxlmm_bw_monitor_exit(struct cxlmm_state *st)
@@ -130,7 +130,7 @@ void cxlmm_bw_monitor_exit(struct cxlmm_state *st)
 }
 
 /* --------------------------------------------------------------------------
- * Public: sample — read current counters and update bw_snapshot
+ * Public: sample : read current counters and update bw_snapshot
  *
  * Called from the scanner kthread (not interrupt context).
  * Accumulates raw CAS counts, converts to MiB, computes per-interval rates.

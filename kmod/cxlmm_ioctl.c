@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * cxlmm_ioctl.c — ioctl dispatch and per-command handlers
+ * cxlmm_ioctl.c : ioctl dispatch and per-command handlers
  *
  * Commands:
  *   CXLMM_IOC_TRACK         add a PID to the scanner watch list
@@ -57,7 +57,7 @@ static long ioctl_track(struct cxlmm_state *st, unsigned long arg)
 
 	/* Verify the PID exists in the kernel */
 	rcu_read_lock();
-	if (!find_task_by_vpid(req.pid)) {
+	if (!pid_task(find_vpid(req.pid), PIDTYPE_PID)) {
 		rcu_read_unlock();
 		return -ESRCH;
 	}
